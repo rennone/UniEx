@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
 using UnityEngine.Assertions;
+using UnityEngine.Rendering;
 
 namespace UniEx
 {
@@ -11,46 +11,49 @@ namespace UniEx
     // 前に使ったGameObjectを使いまわしたい場合などに使う
     public class ActivatableStorage<T> where T : class, IActivatable
     {
-        public const int infinityLimit_ = -1;
+        public const int InfinityLimit = -1;
 
         // オブジェクトを保持するリスト
-        HashSet<T> Storage { get; set; }
+        private HashSet<T> Storage { get; }
 
         // 容量を超えた時に、破壊予定のオブジェクトが入るリスト
-        HashSet<T> StorageForDestroy { get; set; }
+        private HashSet<T> StorageForDestroy { get; set; }
 
-        int StorageLimit { get; set; }
+        public int StorageLimit { get; }
 
-        bool NoLimit
-        {
-            get { return StorageLimit < 0; }
-        }
+        public bool NoLimit { get { return StorageLimit < 0; } }
 
         // ファクトリメソッド
-        public readonly Func<T> factory_;
+        private Func<T> Factory { get; }
+
 
         // ファクトリメソッドを渡す
         /// <summary> ファクトリメソッドとストレージ容量を渡す. 負数だと∞の容量s </summary>
-        public ActivatableStorage(Func<T> factory, int storageLimit = infinityLimit_)
+        public ActivatableStorage(Func<T> factory, int storageLimit = InfinityLimit)
         {
-            factory_ = factory;
-            Assert.IsNotNull(factory_, "factory method is null");
+            Factory = factory;
+            Assert.IsNotNull(Factory, "Factory method is null");
 
             StorageLimit = storageLimit;
             Storage = new HashSet<T>();
             StorageForDestroy = new HashSet<T>();
         }
 
-        /// <summary> 新しいオブジェクトを取得 </summary>
-        public virtual T Spawn()
+        /// <summary> 新しいインスタンスを取得 </summary>
+        public virtual T NextObject()
         {
+            // 外部により破壊されたものは削除しておく
+            Storage.RemoveWhere(x => x == null);
+
             // 非アクティブなオブジェクトを探す
             var ret = Storage.FirstOrDefault(s => s.GetActive() == false);
 
             // 無かったらファクトリメソッドで作る
             if (ret == null)
             {
-                ret = factory_();
+                ret = Factory();
+
+                Assert.IsNotNull(ret, "Factory method return null");
 
                 // 容量を超えていない場合はStorageに保存
                 if (NoLimit || Storage.Count < StorageLimit)
@@ -70,32 +73,61 @@ namespace UniEx
         }
 
         /// <summary> 全部非アクティブ or Destroyする</summary>
-        public virtual void RecallAll()
+        public virtual void DisableAll()
         {
+            // 外部により破壊されたものは削除しておく
+            Storage.RemoveWhere(x => x == null);
+
             foreach (var s in Storage)
                 s.SetActive(false);
 
             // 容量を超えた分は破壊する
-            foreach (var d in StorageForDestroy)
+            foreach (var d in StorageForDestroy.Where(x => x != null))
                 d.Destroy();
 
             StorageForDestroy.Clear();
         }
 
-        /// <summary> 個別に非アクティブ or Destroyする </summary>
-        public virtual void Recall(T objectForDestroy)
+        /// <summary> 個別に非アクティブ or Destroyする. 破壊された場合falseを返す. </summary>
+        public virtual bool RecallObject(T objectForDestroy)
         {
-            objectForDestroy.SetActive(false);
+            if (objectForDestroy == null)
+                return true;
+
+            // Storageにあるものはアクティブだけfalseにする
+            if (Storage.Contains(objectForDestroy))
+            {
+                objectForDestroy.SetActive(false);
+                return true;
+            }
 
             // Storageにないものは破壊する
-            if (!Storage.Contains(objectForDestroy))
-            {
-                // 破壊予定のリストから削除する.(存在しなくても無視される)
-                StorageForDestroy.Remove(objectForDestroy);
+            // 破壊予定のリストから削除する.(存在しなくても無視される)
+            StorageForDestroy.Remove(objectForDestroy);
 
-                // 破壊する
-                objectForDestroy.Destroy();
+            // 破壊する
+            objectForDestroy.Destroy();
+
+            return false;
+        }
+
+        /// <summary>
+        /// Storageにある文も含めてすべてDestroyする.
+        /// </summary>
+        public virtual void DestroyAll()
+        {
+            foreach (var child in Storage.Where(x => x != null))
+            {
+                child.Destroy();
             }
+
+            foreach (var child in StorageForDestroy.Where(x => x != null))
+            {
+                child.Destroy();
+            }
+
+            Storage.Clear();
+            StorageForDestroy.Clear();
         }
 
         /// <summary>　現在アクティブなオブジェクトをすべて返す </summary>
@@ -106,155 +138,95 @@ namespace UniEx
     }
 
     /// <summary> GameObject用のActivatableStorage. カスタムしなければこれを使えばいい. </summary>
-    public class ActivatableGameObjectStorage : ActivatableStorage<ActivatableGameObject>
+    public class GameObjectStorage : ActivatableStorage<ActivatableGameObject>
     {
-        public ActivatableGameObjectStorage(GameObject prefab, Transform tr, bool worldPositionStay,
-            int storageLimit = infinityLimit_)
-            : base(ActivatableObject.GetFactory(prefab, tr, worldPositionStay), storageLimit)
+        public GameObjectStorage(GameObject prefab, Transform tr, bool worldPositionStay = true,
+            int storageLimit = InfinityLimit)
+            : base(ActivatableStorage.GetFactory(prefab, tr, worldPositionStay), storageLimit)
         {
         }
 
-        public ActivatableGameObjectStorage(Func<GameObject> factory, int storageLimit = infinityLimit_)
+        public GameObjectStorage(Func<GameObject> factory, int storageLimit = InfinityLimit)
             : base(() => new ActivatableGameObject(factory()), storageLimit)
         {
+        }
+
+        /// <summary>
+        /// キャッシュから新しいインスタンスを取得する
+        /// </summary>
+        /// <returns></returns>
+        public GameObject Spawn()
+        {
+            return NextObject().I;
+        }
+
+        /// <summary>
+        /// キャッシュに戻す. 戻されず破壊された場合falseを返す
+        /// </summary>
+        /// <param name="objectForDestroy"></param>
+        /// <returns></returns>
+        public bool Recall(GameObject objectForDestroy)
+        {
+            return RecallObject(new ActivatableGameObject(objectForDestroy));
         }
     }
 
     /// <summary> Component用のActivatableStorage. カスタムしなければこれを使えばいい.  </summary>
-    public class ActivatableObjectStorage<T> : ActivatableStorage<ActivatableObject<T>> where T : Component
+    public class ComponentStorage<T> : ActivatableStorage<ActivatableComponent<T>> where T : Component
     {
-        public ActivatableObjectStorage(T prefab, Transform tr, bool worldPositionStay,
-            int storageLimit = infinityLimit_)
-            : base(ActivatableObject.GetFactory(prefab, tr, worldPositionStay), storageLimit)
+        public ComponentStorage(T prefab, Transform tr, bool worldPositionStay = true,
+            int storageLimit = InfinityLimit)
+            : base(ActivatableStorage.GetFactory(prefab, tr, worldPositionStay), storageLimit)
         {
         }
 
-        public ActivatableObjectStorage(Func<T> factory, int storageLimit = infinityLimit_)
-            : base(() => new ActivatableObject<T>(factory()), storageLimit)
+        public ComponentStorage(Func<T> factory, int storageLimit = InfinityLimit)
+            : base(() => new ActivatableComponent<T>(factory()), storageLimit)
         {
         }
-    }
 
-    /// <summary>
-    /// UnityComponentのIActivatable実装
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class ActivatableObject<T> : IActivatable where T : Component
-    {
-        T instance_;
-
-        public T I
+        /// <summary>
+        /// キャッシュから新しいインスタンスを取得する
+        /// </summary>
+        /// <returns></returns>
+        public T Spawn()
         {
-            get { return instance_; }
+            return NextObject().I;
         }
 
-        public ActivatableObject(T component)
+        /// <summary>
+        /// キャッシュに戻す. 戻されず破壊された場合falseを返す
+        /// </summary>
+        /// <param name="objectForDestroy"></param>
+        /// <returns></returns>
+        public bool Recall(T objectForDestroy)
         {
-            instance_ = component;
-        }
-
-        public virtual bool GetActive()
-        {
-            return I.gameObject.activeSelf;
-        }
-
-        public virtual void SetActive(bool enable)
-        {
-            I.gameObject.SetActive(enable);
-        }
-
-        public virtual void Destroy()
-        {
-            GameObject.Destroy(I.gameObject);
+            return RecallObject(new ActivatableComponent<T>(objectForDestroy));
         }
     }
 
     /// <summary>
     /// Factoryの生成用クラス。GetFactoryを呼び出すときに明示的にジェネリック型を書かないで良いようにするためのクラス
     /// </summary>
-    public static class ActivatableObject
+    public static class ActivatableStorage
     {
-        public static Func<ActivatableObject<T>> GetFactory<T>(T prefab, Transform tr, bool worldPositionStay)
+        public static Func<ActivatableComponent<T>> GetFactory<T>(T prefab, Transform tr, bool worldPositionStay)
             where T : Component
         {
-            return () =>
-            {
-                var obj = GameObject.Instantiate<T>(prefab);
-                obj.transform.SetParent(tr, worldPositionStay);
-                return new ActivatableObject<T>(obj);
-            };
+            return () => new ActivatableComponent<T>(UnityEngine.Object.Instantiate(prefab, tr, worldPositionStay));
         }
 
-        public static Func<ActivatableObject<T>> GetFactory<T>(GameObject prefab, Transform tr, bool worldPositionStay)
+        public static Func<ActivatableComponent<T>> GetFactory<T>(GameObject prefab, Transform tr, bool worldPositionStay)
             where T : Component
         {
-            return () =>
-            {
-                var obj = GameObject.Instantiate(prefab, tr, worldPositionStay) as GameObject;
-                return new ActivatableObject<T>(obj.GetComponent<T>());
-            };
+            return () => new ActivatableComponent<T>(UnityEngine.Object.Instantiate(prefab, tr, worldPositionStay).GetComponent<T>());
         }
 
         public static Func<ActivatableGameObject> GetFactory(GameObject prefab, Transform tr, bool worldPositionStay)
         {
-            return () =>
-            {
-                var obj = GameObject.Instantiate(prefab, tr, worldPositionStay) as GameObject;
-                return new ActivatableGameObject(obj);
-            };
+            return () => new ActivatableGameObject(UnityEngine.Object.Instantiate(prefab, tr, worldPositionStay));
         }
     }
 
-    /// <summary>
-    /// GameObjectのIActivatable実装
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class ActivatableGameObject : IActivatable
-    {
-        GameObject instance_;
-
-        public GameObject I
-        {
-            get { return instance_; }
-        }
-
-        public ActivatableGameObject(GameObject instance)
-        {
-            instance_ = instance;
-        }
-
-        public virtual bool GetActive()
-        {
-            return I.gameObject.activeSelf;
-        }
-
-        public virtual void SetActive(bool enable)
-        {
-            I.gameObject.SetActive(enable);
-        }
-
-        public virtual void Destroy()
-        {
-            GameObject.Destroy(I.gameObject);
-        }
-    }
-
-    /// <summary> MonoBehaviourのIActivatable実装 </summary>
-    public class ActivatableBehaviour : MonoBehaviour, IActivatable
-    {
-        public virtual void Destroy()
-        {
-            GameObject.Destroy(gameObject);
-        }
-
-        public virtual bool GetActive()
-        {
-            return gameObject.activeSelf;
-        }
-
-        public virtual void SetActive(bool enable)
-        {
-            gameObject.SetActive(enable);
-        }
-    }
+   
 }

@@ -38,12 +38,7 @@ namespace UniEx
         /// エディタフラグ
         /// </summary> 
         private static readonly bool IsEditor = !IsAndroid && !IsIos;
-
-        /// <summary>
-        /// デルタポジション判定用・前回のポジション
-        /// </summary>
-        static Vector3 prebPosition_;
-
+        
         /// <summary>
         /// タッチ情報を取得(エディタとスマホを考慮)
         /// </summary>
@@ -54,7 +49,6 @@ namespace UniEx
             {
                 if (Input.GetMouseButtonDown(0))
                 {
-                    prebPosition_ = Input.mousePosition;
                     return TouchPhase.Began;
                 }
                 else if (Input.GetMouseButton(0))
@@ -91,7 +85,7 @@ namespace UniEx
         /// タッチポジションを取得(エディタとスマホを考慮)
         /// </summary>
         /// <returns>タッチポジション。タッチされていない場合は (0, 0, 0)</returns>
-        public static Vector3 GetPosition(int touchIndex = 0)
+        public static Vector2 GetPosition(int touchIndex = 0)
         {
             if (IsEditor)
             {
@@ -101,32 +95,8 @@ namespace UniEx
             {
                 if (Input.touchCount > touchIndex) return Input.GetTouch(touchIndex).position;
             }
-            return Vector3.zero;
-        }
 
-
-        /// <summary>
-        /// タッチデルタポジションを取得(エディタとスマホを考慮)
-        /// </summary>
-        /// <returns>タッチポジション。タッチされていない場合は (0, 0, 0)</returns>
-        public static Vector3 GetDeltaPosition()
-        {
-            if (IsEditor)
-            {
-                var phase = GetPhase();
-                if (phase != TouchPhase.None)
-                {
-                    var now = Input.mousePosition;
-                    var delta = now - prebPosition_;
-                    prebPosition_ = now;
-                    return delta;
-                }
-            }
-            else
-            {
-                if (Input.touchCount > 0) return Input.GetTouch(0).deltaPosition;
-            }
-            return Vector3.zero;
+            return Vector2.zero;
         }
     }
 

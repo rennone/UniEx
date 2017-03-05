@@ -9,17 +9,19 @@ namespace UniEx
     public class IgnoreRaycaster : MonoBehaviour, ICanvasRaycastFilter
     {
         [Serializable]
-        public class MouseUpEvent : UnityEvent
-        {
-        }
+        public class MouseUpEvent : UnityEvent{}
 
-        [SerializeField] MouseUpEvent onMouseUp_;
+        [SerializeField]
+        MouseUpEvent onMouseUp_;
 
+        /// <summary>
+        /// MouseUp時のイベント
+        /// </summary>
         public MouseUpEvent OnMouseUp
         {
             get { return onMouseUp_; }
+            set { onMouseUp_ = value; }
         }
-
 
         public bool IsRaycastLocationValid(Vector2 sp, Camera eventCamera)
         {
@@ -29,6 +31,7 @@ namespace UniEx
                 OnMouseUp.Invoke();
             }
 
+            // タッチ判定を透過させるために常にfalseを返す
             return false;
         }
     }
