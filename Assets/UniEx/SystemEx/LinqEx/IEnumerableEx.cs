@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace UniEx
 {
@@ -72,10 +73,7 @@ namespace UniEx
         /// </summary>
         public static TSource RandomOrDefault<TSource>(this IEnumerable<TSource> self)
         {
-            if (self.IsNullOrEmpty())
-                return default(TSource);
-
-            return self.Random();
+            return self.IsNullOrEmpty() ? default(TSource) : self.Random();
         }
 
         /// <summary>
@@ -130,7 +128,7 @@ namespace UniEx
         public static Dictionary<TKey, List<TValue>> Merge2Dictionary<TSource, TKey, TValue>(
             this IEnumerable<TSource> self, Func<TSource, TKey> keySelector, Func<TSource, TValue> valueSelector)
         {
-            Dictionary<TKey, List<TValue>> ret = new Dictionary<TKey, List<TValue>>();
+            var ret = new Dictionary<TKey, List<TValue>>();
 
             foreach (var elem in self)
             {
@@ -149,11 +147,7 @@ namespace UniEx
         // 存在しているものがあればfalseを返す
         public static bool AddRange<T>(this HashSet<T> self, IEnumerable<T> range)
         {
-            bool ret = true;
-            foreach (var e in range)
-                ret &= self.Add(e);
-
-            return ret;
+            return range.Aggregate(true, (current, e) => current & self.Add(e));
         }
 
         /// <summary>
@@ -173,7 +167,7 @@ namespace UniEx
         /// <typeparam name="T"></typeparam>
         /// <param name="self"></param>
         /// <returns></returns>
-        public static bool HasAny<T>(this IEnumerable<T> self)
+        public static bool NotEmpty<T>(this IEnumerable<T> self)
         {
             return self.IsNullOrEmpty() == false;
         }
@@ -191,10 +185,7 @@ namespace UniEx
         /// <summary> predictを満たすインデックスをすべて取得する </summary>
         public static IEnumerable<int> FindAllIndex<T>(this IEnumerable<T> self, Func<T, bool> predict)
         {
-            foreach (var item in self.Select((v, i) => new {v, i}).Where(x => predict(x.v)))
-            {
-                yield return item.i;
-            }
+            return self.Select((v, i) => new {v, i}).Where(x => predict(x.v)).Select(item => item.i);
         }
 
         public static int FindIndex<T>(this IEnumerable<T> self, T element)

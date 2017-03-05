@@ -1,14 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[System.Serializable]
-public class OrbitAnimationCurveTimeFunc : OrbitTimeFunc
+namespace UniEx
 {
-	[SerializeField]
-	AnimationCurve animationCurve_ = new AnimationCurve();
+    [System.Serializable]
+    public class OrbitAnimationCurveTimeFunc : OrbitTimeFunc
+    {
+        [SerializeField] AnimationCurve animationCurve_ = new AnimationCurve();
 
-	public override float TimeFunc(float normalizedTime)
-	{
-		return animationCurve_.Evaluate(normalizedTime);
-	}
+        public override float TimeFunc(float normalizedTime)
+        {
+            return animationCurve_.Evaluate(normalizedTime);
+        }
+    }
 }

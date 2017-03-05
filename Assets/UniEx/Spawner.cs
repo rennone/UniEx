@@ -17,7 +17,7 @@ public class Spawner
     {
         if (cache_ == null)
         {
-            DebugPro.Log("ObjectCache is null", DebugPro.Tag.Global);
+            Debug.Log("ObjectCache is null");
             return null;
         }
 

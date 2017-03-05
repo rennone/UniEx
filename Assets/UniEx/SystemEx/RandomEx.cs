@@ -16,14 +16,7 @@ namespace UniEx
             return new Vector2(x, y);
         }
 
-        // ランダムなVector2を返す
-        public static Vector2 ThreadSafeRandomVector(float min, float max)
-        {
-            var x = ThreadSafeRange(min, max);
-            var y = ThreadSafeRange(min, max);
 
-            return new Vector2(x, y);
-        }
 
         // ランダムなVector2を返す
         public static Vector2 RandomVector(Vector2 min, Vector2 max)
@@ -34,14 +27,6 @@ namespace UniEx
             return new Vector2(x, y);
         }
 
-        // ランダムなVector2を返す
-        public static Vector2 ThreadSafeRandomVector(Vector2 min, Vector2 max)
-        {
-            var x = ThreadSafeRange(min.x, max.x);
-            var y = ThreadSafeRange(min.y, max.y);
-
-            return new Vector2(x, y);
-        }
 
         //public static Location RandomLocation(Location min, Location max)
         //{
@@ -63,10 +48,7 @@ namespace UniEx
             return Range(0, 100) < successRatePercent;
         }
 
-        public static bool ThreadSafeCoinToss(int successRatePercent)
-        {
-            return ThreadSafeRange(0, 100) < successRatePercent;
-        }
+ 
 
         public static bool CoinToss(float successRatePercent)
         {
@@ -80,20 +62,6 @@ namespace UniEx
             }
 
             return Range(0f, 100f) < successRatePercent;
-        }
-
-        public static bool ThreadSafeCoinToss(float successRatePercent)
-        {
-            // Randomのvalueが1.0を含んでしまうので
-            // 100%かどうかはチェックを入れている
-            // 等号だと誤差により, 100%で失敗する可能性があるかもしれないので
-            // 100 - 1e-6 [%]以上が 100%扱いになる. 
-            if (successRatePercent > 100f - Mathf.Epsilon)
-            {
-                return true;
-            }
-
-            return ThreadSafeRange(0f, 100f) < successRatePercent;
         }
 
         // n面のサイコロを振った時の結果を 0 ~ n-1 で返す
@@ -125,27 +93,7 @@ namespace UniEx
             return weights.Count() - 1;
         }
 
-        public static int ThreadSafeDiceToss(params int[] weights)
-        {
-            // 重みの全合計値から乱数発生
-            // 0 ~ sum-1
-            var value = ThreadSafeRange(0, weights.Sum());
 
-            int total = 0;
-            foreach (var item in weights.Select((v, i) => new { v, i }))
-            {
-                // それまでの合計値
-                total += item.v;
-
-                // 超えた瞬間その目が答え
-                if (total > value)
-                    return item.i;
-            }
-
-            // パラメータが無いときに来る
-            //DebugLogger.LogWarning("DiceToss : no weight parameter", DebugLogger.Tag.Global);
-            return weights.Length - 1;
-        }
 
         /// <summary>
         /// DiceTossをnum回振った時の結果を取得する
@@ -167,18 +115,7 @@ namespace UniEx
             return ret;
         }
 
-        public static int[] ThreadSafeDiceToss(int num, params int[] weights)
-        {
-            if (num <= 0 || weights.Length == 0)
-                return new int[0];
 
-            int[] ret = new int[weights.Length];
-
-            for (int i = 0; i < num; ++i)
-                ret[ThreadSafeDiceToss(weights)] += 1;
-
-            return ret;
-        }
 
         /// <summary>
         ///  return [inclusive]min ~ max[exclusive]
@@ -193,7 +130,7 @@ namespace UniEx
 
         public static int ThreadSafeRange(int min, int max)
         {
-            return ThreadSafeRandom.Next(min, max);
+            return SafeRandom.Range(min, max);
         }
 
         /// <summary>
@@ -206,17 +143,7 @@ namespace UniEx
         {
             return Random.Range(min, max);
         }
-
-        public static float ThreadSafeRange(float min, float max)
-        {
-            return (float)(ThreadSafeRandom.NextDouble() * (min - max) + min);
-        }
-
-        public static double ThreadSafeNextDouble()
-        {
-            return ThreadSafeRandom.NextDouble();
-        }
-
+        
         public static double NextDouble()
         {
             return Random.value;

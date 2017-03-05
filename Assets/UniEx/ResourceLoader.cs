@@ -372,7 +372,7 @@ public static class ResourceLoader
         var obj = Resources.Load(path);
         if (obj == null)
         {
-            DebugPro.LogWarning("cannot load " + path, DebugPro.Tag.Resource);
+            Debug.LogWarning("cannot load " + path);
         }
 
         //Assert.IsNotNull(obj);
@@ -386,7 +386,7 @@ public static class ResourceLoader
 
         if(obj == null)
         {
-            DebugPro.LogWarning("cannot load " + path, DebugPro.Tag.Resource);
+            Debug.LogWarning("cannot load " + path);
         }
 		
         return obj;
@@ -400,7 +400,7 @@ public static class ResourceLoader
 
 		if(obj == null || obj.Length == 0)
 		{
-			DebugPro.LogWarning("no file at " + path, DebugPro.Tag.Resource);
+			Debug.LogWarning("no file at " + path);
 		}
 
 		return obj;
