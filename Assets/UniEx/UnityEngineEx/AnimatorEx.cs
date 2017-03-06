@@ -5,17 +5,6 @@ namespace UniEx
 {
     public static class AnimatorEx
     {
-        public static RuntimeAnimatorController LoadRuntimeAnimator(string path)
-        {
-            var animatorController = ResourceLoader.Load<RuntimeAnimatorController>(path);
-
-            // AnimationClip書換用のoverrideAnimatorControllerの作成
-            AnimatorOverrideController overrideAnimatorController = new AnimatorOverrideController();
-            overrideAnimatorController.runtimeAnimatorController = animatorController;
-
-            return overrideAnimatorController;
-        }
-
         /// <summary>
         /// トリガーの状態を取得
         /// </summary>

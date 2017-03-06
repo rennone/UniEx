@@ -13,7 +13,7 @@ namespace UniEx
     {
         public const string DateFormat = "yyyy-MM-dd HH:mm:ss";
 
-        [SerializeField] string dateStr_;
+        [SerializeField] private string dateStr_;
 
         // DateTimeはNull非許容型なのでNullrableで持つ
         DateTime? dateTime_;
@@ -35,16 +35,12 @@ namespace UniEx
             }
         }
 
+        // 日付が空かどうか
         public bool IsNull
         {
             get { return dateStr_.IsNullOrEmpty(); }
         }
 
-        // 日付が空かどうか
-        public bool IsValid
-        {
-            get { return !IsNull; }
-        }
 
         public SerializableDateTime(string str)
         {
@@ -94,7 +90,7 @@ namespace UniEx
         public bool Equals(SerializableDateTime d)
         {
             // 日付が同じかチェック
-            return d.IsValid && d.DateTime == DateTime;
+            return !d.IsNull && d.DateTime == DateTime;
         }
 
         public static bool operator ==(SerializableDateTime lhs, SerializableDateTime rhs)
