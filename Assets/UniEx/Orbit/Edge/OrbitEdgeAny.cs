@@ -17,22 +17,13 @@ namespace UniEx
             get { return destFunc_(); }
         }
 
-        Func<Vector2> destFunc_;
-        Func<Vector2> startFunc_;
+        readonly Func<Vector2> destFunc_;
+        readonly Func<Vector2> startFunc_;
 
         public OrbitEdgeAny(Func<Vector2> startFunc, Func<Vector2> destFunc)
         {
             startFunc_ = startFunc;
             destFunc_ = destFunc;
-        }
-    }
-
-
-    public class OrbitEdgeAnyDest : OrbitEdgeAny
-    {
-        public OrbitEdgeAnyDest(Vector2 start, Func<Vector2> destFunc)
-            : base(() => start, destFunc)
-        {
         }
     }
 }

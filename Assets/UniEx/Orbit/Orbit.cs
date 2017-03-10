@@ -173,34 +173,34 @@ namespace UniEx
     public class Orbit2DNoOption : Orbit2D<object>
     {
         // オプション有りの方は継承できないようにする
-        protected override sealed object CreateOption(OrbitEdge edge, OrbitTimeFunc timeFunc, float time)
+        protected sealed override object CreateOption(OrbitEdge edge, OrbitTimeFunc timeFunc, float time)
         {
             return null;
         }
 
         // 接線方向の計算
-        protected override sealed Vector2 TangentFunc(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
+        protected sealed override Vector2 TangentFunc(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
             object option)
         {
             return TangentFunc(edge, lastPos, normalizedTime);
         }
 
         // 法線方向の計算
-        protected override sealed Vector2 NormalFunc(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
+        protected sealed override Vector2 NormalFunc(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
             object option)
         {
             return NormalFunc(edge, lastPos, normalizedTime);
         }
 
         // 法線方向のベクトル計算(デフォルトではNormalFuncで計算した結果にPriorityによる調整を入れているのみ
-        protected override sealed Vector2 GetNormalVector(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
+        protected sealed override Vector2 GetNormalVector(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
             object option)
         {
             return GetNormalVector(edge, lastPos, normalizedTime);
         }
 
         // オプション有りバージョン
-        protected override sealed Vector2 GetTangentVector(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
+        protected sealed override Vector2 GetTangentVector(OrbitEdge edge, Vector2 lastPos, float normalizedTime,
             object option)
         {
             return GetTangentVector(edge, lastPos, normalizedTime);
