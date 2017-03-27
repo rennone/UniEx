@@ -192,5 +192,31 @@ namespace UniEx
         {
             return self.FindIndex(x => EqualityComparer<T>.Default.Equals(x, element));
         }
+
+        public static IEnumerable<T> Scan<T>(this IEnumerable<T> self, Func<T, T, T> accumrator)
+        {
+            var seed = self.First();
+            return self.Scan(accumrator, seed);
+        }
+
+        public static IEnumerable<T> Scan<T>(this IEnumerable<T> self, Func<T, T, T> accumrator, T seed)
+        {
+            foreach (var t in self)
+            {
+                var ret = accumrator(seed, t);
+                yield return ret;
+                seed = ret;
+            }
+        }
+
+        public static IEnumerable<T> Scan<T>(Func<T, int, T> accumrator, T seed, int count)
+        {
+            foreach (var i in Enumerable.Range(0, count))
+            {
+                var ret = accumrator(seed, i);
+                yield return ret;
+                seed = ret;
+            }
+        }
     }
 }

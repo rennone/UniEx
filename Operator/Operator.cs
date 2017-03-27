@@ -22,6 +22,11 @@ namespace UniEx.Operator
         public static readonly Func<T, float> ToFloat = Convert<float>(Expression.Convert);
         public static readonly Func<T, double> ToDouble = Convert<double>(Expression.Convert);
         public static readonly Func<T, int> ToInt = Convert<int>(Expression.Convert);
+        public static readonly Func<T, T,T> LeftShift = Lambda(Expression.LeftShift);
+        public static readonly Func<T, T, T> RightShift = Lambda(Expression.RightShift);
+        public static readonly Func<T, T, T> Or = Lambda(Expression.Or);
+        public static readonly Func<T, T, T> And = Lambda(Expression.And);
+        public static readonly Func<T, T, T> ExclusiveOr = Lambda(Expression.ExclusiveOr);
         public static Func<T, T, T> Lambda(Binary op)
         {
             return Expression.Lambda<Func<T, T, T>>(op(X, Y), X, Y).Compile();

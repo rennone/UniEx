@@ -74,5 +74,15 @@ namespace UniEx
         {
             return new Vector2(Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y));
         }
+
+        public static int PowInt(int f, int p)
+        {
+            if (p == 0)
+                return 1;
+
+            var r = PowInt(f, p >> 1);
+
+            return (p & 1) == 0 ? r*r : r*r*f;
+        }
     }
 }
