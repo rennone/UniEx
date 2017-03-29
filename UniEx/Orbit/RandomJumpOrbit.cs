@@ -35,7 +35,7 @@ namespace UniEx
         // オプション値は, 今回の軌道で使うジャンプ量. min ~ maxの間でランダムに生成する
         protected override float CreateOption(OrbitEdge edge, OrbitTimeFunc timeFunc, float time)
         {
-            return RandomUtility.Range(MinJumpLength, MaxJumpLength);
+            return RandomEx.Range(MinJumpLength, MaxJumpLength);
         }
 
         /// <summary>

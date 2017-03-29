@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.Assertions;
 using System;
-
+using CsEx;
 namespace UniEx
 {
     public abstract class CachedObject<T> where T : UnityEngine.Object

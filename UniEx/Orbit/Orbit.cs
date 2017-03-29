@@ -139,7 +139,7 @@ namespace UniEx
             var last = edge.Start;
 
             // 反転するかどうか
-            var reverse = NormalPriority == NormPriority.Random && RandomUtility.CoinToss(50);
+            var reverse = NormalPriority == NormPriority.Random && RandomEx.CoinToss(50);
 
             // オプションを取得
             var option = CreateOption(edge, timeFunc, time);

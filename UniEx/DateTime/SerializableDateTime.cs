@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
+using CsEx;
 
 namespace UniEx
 {
@@ -13,7 +13,7 @@ namespace UniEx
     {
         public const string DateFormat = "yyyy-MM-dd HH:mm:ss";
 
-        [SerializeField] private string dateStr_;
+        [SerializeField] private readonly string dateStr_;
 
         // DateTimeはNull非許容型なのでNullrableで持つ
         DateTime? dateTime_;
@@ -78,13 +78,7 @@ namespace UniEx
         public override bool Equals(object obj)
         {
             // 
-            if (obj == null)
-            {
-                // DateTimeがnullかどうか
-                return IsNull;
-            }
-
-            return base.Equals(obj);
+            return obj == null ? IsNull : base.Equals(obj);
         }
 
         public bool Equals(SerializableDateTime d)
@@ -95,14 +89,7 @@ namespace UniEx
 
         public static bool operator ==(SerializableDateTime lhs, SerializableDateTime rhs)
         {
-
-            // lhsがnullでない場合, Equal関数を呼んでチェック
-            if ((object) lhs != null)
-                return lhs.Equals(rhs);
-
-            // ここに来た段階で
-            // lhs = null かつ rhs != null
-            return rhs.IsNull;
+            return lhs.Equals(rhs);
         }
 
         public static bool operator !=(SerializableDateTime lhs, SerializableDateTime rhs)
