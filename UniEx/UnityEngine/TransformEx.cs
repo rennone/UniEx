@@ -240,7 +240,7 @@ namespace UniEx
         /// </summary>
         public static T GetChildComponent<T>(this Transform tr, string path) where T : Component
         {
-            var child = tr.FindChild(path);
+            var child = tr.Find(path);
 
             if (child == null)
             {
@@ -256,7 +256,7 @@ namespace UniEx
         /// </summary>
         public static T GetOrAddChildComponent<T>(this Transform tr, string path) where T : Component
         {
-            var child = tr.FindChild(path);
+            var child = tr.Find(path);
             if (child == null)
             {
                 Debug.LogWarning("can not find child " + path + " of " + tr.GetFullpathName());

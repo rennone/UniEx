@@ -46,7 +46,7 @@ namespace UniEx
 
         protected override Transform GetObject(Transform root)
         {
-            return root.FindChild(Path);
+            return root.Find(Path);
         }
     }
 
@@ -59,7 +59,7 @@ namespace UniEx
 
         protected override GameObject GetObject(Transform root)
         {
-            var tr = root.FindChild(Path);
+            var tr = root.Find(Path);
             return tr == null ? null : tr.gameObject;
         }
     }
